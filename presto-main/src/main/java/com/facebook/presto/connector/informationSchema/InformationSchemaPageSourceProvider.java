@@ -110,7 +110,6 @@ public class InformationSchemaPageSourceProvider
         InformationSchemaSplit split = checkType(connectorSplit, InformationSchemaSplit.class, "split");
 
         checkNotNull(columns, "columns is null");
-        checkArgument(!columns.isEmpty(), "must provide at least one column");
 
         InformationSchemaTableHandle handle = split.getTableHandle();
         Map<String, SerializableNativeValue> filters = split.getFilters();
@@ -159,7 +158,7 @@ public class InformationSchemaPageSourceProvider
                         column.getOrdinalPosition() + 1,
                         null,
                         "YES",
-                        column.getType().getTypeSignature().toString(),
+                        column.getType().getDisplayName(),
                         column.isPartitionKey() ? "YES" : "NO",
                         column.getComment());
             }

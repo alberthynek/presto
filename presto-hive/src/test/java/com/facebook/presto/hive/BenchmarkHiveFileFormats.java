@@ -14,6 +14,10 @@
 package com.facebook.presto.hive;
 
 import com.facebook.presto.hadoop.HadoopNative;
+import com.facebook.presto.hive.orc.DwrfPageSourceFactory;
+import com.facebook.presto.hive.orc.DwrfRecordCursorProvider;
+import com.facebook.presto.hive.orc.OrcPageSourceFactory;
+import com.facebook.presto.hive.orc.OrcRecordCursorProvider;
 import com.facebook.presto.hive.rcfile.RcFilePageSourceFactory;
 import com.facebook.presto.spi.ConnectorPageSource;
 import com.facebook.presto.spi.ConnectorSession;
@@ -37,7 +41,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.FileSinkOperator.RecordWriter;
 import org.apache.hadoop.hive.ql.io.HiveOutputFormat;
-import org.apache.hadoop.hive.ql.io.IOConstants;
 import org.apache.hadoop.hive.ql.io.RCFileInputFormat;
 import org.apache.hadoop.hive.ql.io.RCFileOutputFormat;
 import org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat;
@@ -169,7 +172,6 @@ public final class BenchmarkHiveFileFormats
     {
         HadoopNative.requireHadoopNative();
         ReaderWriterProfiler.setProfilerOptions(JOB_CONF);
-        JOB_CONF.set(IOConstants.COLUMNS, Joiner.on(',').join(transform(COLUMNS, columnNameGetter())));
         DATA_DIR.mkdirs();
 
         List<BenchmarkFile> benchmarkFiles = ImmutableList.<BenchmarkFile>builder()

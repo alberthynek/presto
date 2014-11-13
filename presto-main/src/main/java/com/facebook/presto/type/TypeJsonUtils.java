@@ -18,6 +18,7 @@ import com.facebook.presto.spi.block.BlockBuilder;
 import com.facebook.presto.spi.block.BlockBuilderStatus;
 import com.facebook.presto.spi.type.Type;
 import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.google.common.base.Throwables;
@@ -32,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.fasterxml.jackson.core.JsonFactory.Feature.CANONICALIZE_FIELD_NAMES;
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
 public final class TypeJsonUtils
@@ -84,6 +86,22 @@ public final class TypeJsonUtils
             return Collections.unmodifiableMap(map);
         }
 
+        if (type instanceof RowType) {
+            List<Object> list = new ArrayList<>();
+            checkState(parser.getCurrentToken() == JsonToken.START_ARRAY, "Expected a json array");
+            int field = 0;
+            RowType rowType = (RowType) type;
+            while (parser.nextValue() != JsonToken.END_ARRAY) {
+                checkArgument(field < rowType.getFields().size(), "Unexpected field for type %s", type);
+                Object value = stackRepresentationToObjectHelper(session, parser, rowType.getFields().get(field).getType());
+                list.add(value);
+                field++;
+            }
+            checkArgument(field == rowType.getFields().size(), "Expected %d fields for type %s", rowType.getFields().size(), type);
+
+            return Collections.unmodifiableList(list);
+        }
+
         BlockBuilder blockBuilder = type.createBlockBuilder(new BlockBuilderStatus());
         if (type.getJavaType() == boolean.class) {
             type.writeBoolean(blockBuilder, parser.getBooleanValue());
@@ -92,7 +110,15 @@ public final class TypeJsonUtils
             type.writeLong(blockBuilder, parser.getLongValue());
         }
         else if (type.getJavaType() == double.class) {
-            type.writeDouble(blockBuilder, parser.getDoubleValue());
+            double value;
+            try {
+                value = parser.getDoubleValue();
+            }
+            catch (JsonParseException e) {
+                //handle non-numeric numbers (inf/nan)
+                value = Double.parseDouble(parser.getValueAsString());
+            }
+            type.writeDouble(blockBuilder, value);
         }
         else if (type.getJavaType() == Slice.class) {
             type.writeSlice(blockBuilder, Slices.utf8Slice(parser.getValueAsString()));

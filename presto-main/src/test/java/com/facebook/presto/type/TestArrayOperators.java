@@ -86,6 +86,9 @@ public class TestArrayOperators
         assertFunction("ARRAY [from_unixtime(1), from_unixtime(100)]", ImmutableList.of(
                 new SqlTimestamp(1000, TEST_SESSION.getTimeZoneKey()),
                 new SqlTimestamp(100_000, TEST_SESSION.getTimeZoneKey())));
+        assertFunction("ARRAY [sqrt(-1)]", ImmutableList.of(Double.NaN));
+        assertFunction("ARRAY [pow(infinity(), 2)]", ImmutableList.of(Double.POSITIVE_INFINITY));
+        assertFunction("ARRAY [pow(-infinity(), 1)]", ImmutableList.of(Double.NEGATIVE_INFINITY));
     }
 
     @Test
@@ -161,5 +164,33 @@ public class TestArrayOperators
         assertFunction("ARRAY ['puppies', 'kittens', NULL][3]", null);
         assertFunction("ARRAY [TRUE, FALSE][2]", false);
         assertFunction("ARRAY [from_unixtime(1), from_unixtime(100)][1]", new SqlTimestamp(1000, TEST_SESSION.getTimeZoneKey()));
+    }
+
+    @Test
+    public void testSort()
+            throws Exception
+    {
+        assertFunction("ARRAY_SORT(ARRAY[2, 3, 4, 1])", ImmutableList.of(1L, 2L, 3L, 4L));
+        assertFunction("ARRAY_SORT(ARRAY['z', 'f', 's', 'd', 'g'])", ImmutableList.of("d", "f", "g", "s", "z"));
+        assertFunction("ARRAY_SORT(ARRAY[TRUE, FALSE])", ImmutableList.of(false, true));
+        assertFunction("ARRAY_SORT(ARRAY[22.1, 11.1, 1.1, 44.1])", ImmutableList.of(1.1, 11.1, 22.1, 44.1));
+        assertFunction("ARRAY_SORT(ARRAY [from_unixtime(100), from_unixtime(1), from_unixtime(200)])",
+                ImmutableList.of(new SqlTimestamp(1000, TEST_SESSION.getTimeZoneKey()), new SqlTimestamp(100 * 1000, TEST_SESSION.getTimeZoneKey()), new SqlTimestamp(200 * 1000, TEST_SESSION.getTimeZoneKey())));
+
+        try {
+            assertFunction("ARRAY_SORT(ARRAY [ARRAY [1], ARRAY [2]])", null);
+            fail("ARRAY_SORT is not supported for arrays with incomparable elements");
+        }
+        catch (RuntimeException e) {
+            // Expected
+        }
+
+        try {
+            assertFunction("ARRAY_SORT(ARRAY[NULL, NULL, NULL])", null);
+            fail("ARRAY_SORT is not supported for arrays with incomparable elements");
+        }
+        catch (RuntimeException e) {
+            // Expected
+        }
     }
 }

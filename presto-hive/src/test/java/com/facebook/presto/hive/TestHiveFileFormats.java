@@ -13,6 +13,10 @@
  */
 package com.facebook.presto.hive;
 
+import com.facebook.presto.hive.orc.DwrfPageSourceFactory;
+import com.facebook.presto.hive.orc.DwrfRecordCursorProvider;
+import com.facebook.presto.hive.orc.OrcPageSourceFactory;
+import com.facebook.presto.hive.orc.OrcRecordCursorProvider;
 import com.facebook.presto.hive.rcfile.RcFilePageSourceFactory;
 import com.facebook.presto.spi.ConnectorPageSource;
 import com.facebook.presto.spi.ConnectorSession;
@@ -101,7 +105,7 @@ public class TestHiveFileFormats
         }
     }
 
-    @Test
+    @Test(enabled = false)
     public void testRcTextPageSource()
             throws Exception
     {
@@ -141,6 +145,7 @@ public class TestHiveFileFormats
         }
     }
 
+    @Test(enabled = false)
     public void testRcBinaryPageSource()
             throws Exception
     {

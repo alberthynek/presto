@@ -13,6 +13,8 @@
  */
 package com.facebook.presto.hive.orc;
 
+import com.facebook.presto.orc.DiskRange;
+import com.facebook.presto.orc.OrcDataSource;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.Ints;
 import io.airlift.slice.Slice;
@@ -30,8 +32,8 @@ public class HdfsOrcDataSource
 {
     private final FSDataInputStream inputStream;
     private final String path;
+    private final long size;
     private long readTimeNanos;
-    private long size;
 
     public HdfsOrcDataSource(String path, FSDataInputStream inputStream, long size)
             throws IOException
@@ -48,6 +50,7 @@ public class HdfsOrcDataSource
         inputStream.close();
     }
 
+    @Override
     public long getReadTimeNanos()
     {
         return readTimeNanos;
